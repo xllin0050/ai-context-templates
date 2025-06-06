@@ -60,3 +60,82 @@ case $BACKEND_CHOICE in
     4) BACKEND_PRESET="python-flask" ;;
     *) BACKEND_PRESET="none" ;;
 esac
+
+echo
+print_info "選擇雲端服務："
+echo "1) Supabase (推薦)"
+echo "2) PocketBase"
+echo "3) 無雲端服務"
+
+read -p "選擇 (1-3): " DATABASE_CHOICE
+
+case $DATABASE_CHOICE in
+    1) DATABASE_PRESET="supabase" ;;
+    2) DATABASE_PRESET="pocketbase" ;;
+    3) DATABASE_PRESET="none" ;;
+    *) DATABASE_PRESET="supabase" ;;
+esac
+
+# 複製並自定義模板
+print_message "產生配置檔案..."
+
+# 複製模板
+cp templates/*.md active-context/
+
+# 替換佔位符 (跨平台兼容)
+for file in active-context/*.md; do
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i "" "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" "$file"
+        sed -i "" "s/{{PROJECT_DESCRIPTION}}/$PROJECT_DESCRIPTION/g" "$file"
+    else
+        sed -i "s/{{PROJECT_NAME}}/$PROJECT_NAME/g" "$file"
+        sed -i "s/{{PROJECT_DESCRIPTION}}/$PROJECT_DESCRIPTION/g" "$file"
+    fi
+done
+
+# 特別處理 tech-stack.md
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i "" "s/{{FRONTEND_PRESET}}/$FRONTEND_PRESET/g" active-context/tech-stack.md
+    sed -i "" "s/{{BACKEND_PRESET}}/$BACKEND_PRESET/g" active-context/tech-stack.md
+    sed -i "" "s/{{DATABASE_PRESET}}/$DATABASE_PRESET/g" active-context/tech-stack.md
+else
+    sed -i "s/{{FRONTEND_PRESET}}/$FRONTEND_PRESET/g" active-context/tech-stack.md
+    sed -i "s/{{BACKEND_PRESET}}/$BACKEND_PRESET/g" active-context/tech-stack.md
+    sed -i "s/{{DATABASE_PRESET}}/$DATABASE_PRESET/g" active-context/tech-stack.md
+fi
+
+# 建立主要的載入規則
+cat > active-context/onboarding-rule.md << EOF
+# AI 上下文載入
+
+請依序讀取以下檔案了解專案：
+
+## 📋 專案概覽
+參考: active-context/project-overview.md
+
+## 🔧 技術棧
+參考: active-context/tech-stack.md
+
+## 🏗️ 專案結構  
+參考: active-context/project-structure.md
+
+## 🤖 你的角色
+參考: active-context/ai-role.md
+
+## 🤝 協作模式
+參考: active-context/collaboration-modes.md
+
+---
+
+**讀取完成後回應**: ✅ 上下文載入完成！我了解這是一個使用 $FRONTEND_PRESET 的專案，準備開始協作！
+
+EOF
+
+print_message "✅ 配置完成！"
+echo
+print_info "下一步："
+echo "1. 在 AI 工具 (Windsurf/Cursor) 中使用: @onboarding-rule.md"
+echo "2. 等待 AI 載入完成後開始開發"
+echo
+print_info "配置檔案位置: active-context/"
+print_info "主要載入檔案: active-context/onboarding-rule.md"
